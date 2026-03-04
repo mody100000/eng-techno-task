@@ -53,6 +53,7 @@ export const AnyNull = runtime.AnyNull
 export const ModelName = {
   User: 'User',
   Task: 'Task',
+  TaskActivityLog: 'TaskActivityLog',
   Comment: 'Comment'
 } as const
 
@@ -82,17 +83,30 @@ export const TaskScalarFieldEnum = {
   id: 'id',
   title: 'title',
   description: 'description',
+  category: 'category',
   status: 'status',
   priority: 'priority',
+  startDate: 'startDate',
   dueDate: 'dueDate',
-  archived: 'archived',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt',
   createdById: 'createdById',
-  assignedToId: 'assignedToId'
+  assignedToId: 'assignedToId',
+  archivedById: 'archivedById'
 } as const
 
 export type TaskScalarFieldEnum = (typeof TaskScalarFieldEnum)[keyof typeof TaskScalarFieldEnum]
+
+
+export const TaskActivityLogScalarFieldEnum = {
+  id: 'id',
+  action: 'action',
+  timestamp: 'timestamp',
+  taskId: 'taskId',
+  performedById: 'performedById'
+} as const
+
+export type TaskActivityLogScalarFieldEnum = (typeof TaskActivityLogScalarFieldEnum)[keyof typeof TaskActivityLogScalarFieldEnum]
 
 
 export const CommentScalarFieldEnum = {

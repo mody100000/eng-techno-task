@@ -2,24 +2,28 @@ generator client {
   provider = "prisma-client"
   output   = "../src/generated/prisma"
 }
+
 datasource db {
   provider = "sqlite"
 }
 
 model User {
-  id          String   @id @default(uuid())
+  id        String   @id @default(uuid())
   name      String?
   createdAt DateTime @default(now())
 
-  createdTasks Task[] @relation("createdTasks")
+  createdTasks  Task[] @relation("createdTasks")
   assignedTasks Task[] @relation("assignedTasks")
+  archivedTasks Task[] @relation("archivedTasks")
 
-  comments     Comment[]
+  comments            Comment[]
+  performedActivities TaskActivityLog[]
 }
- 
+
 enum TaskStatus {
   TODO
   IN_PROGRESS
+  BLOCKED
   DONE
 }
 
@@ -30,23 +34,40 @@ enum TaskPriority {
 }
 
 model Task {
-  id          String   @id @default(uuid())
+  id          String       @id @default(uuid())
   title       String
   description String?
-  status      TaskStatus @default(TODO)
+  category    String?
+  status      TaskStatus   @default(TODO)
   priority    TaskPriority @default(MEDIUM)
+  startDate   DateTime     @default(now())
   dueDate     DateTime?
-  archived    Boolean  @default(false)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
 
-  createdBy   User     @relation(fields: [createdById], references: [id], name: "createdTasks")
+  createdBy   User   @relation(fields: [createdById], references: [id], name: "createdTasks")
   createdById String
 
-  assignedTo   User?    @relation(fields: [assignedToId], references: [id], name: "assignedTasks")
+  assignedTo   User?   @relation(fields: [assignedToId], references: [id], name: "assignedTasks")
   assignedToId String?
 
   comments     Comment[]
+  activityLogs TaskActivityLog[]
+
+  archievedBy  User?   @relation(fields: [archivedById], references: [id], name: "archivedTasks")
+  archivedById String?
+}
+
+model TaskActivityLog {
+  id        String   @id @default(uuid())
+  action    String
+  timestamp DateTime @default(now())
+
+  task   Task   @relation(fields: [taskId], references: [id])
+  taskId String
+
+  performedBy   User   @relation(fields: [performedById], references: [id])
+  performedById String
 }
 
 model Comment {
@@ -54,9 +75,9 @@ model Comment {
   message   String
   createdAt DateTime @default(now())
 
-  task      Task     @relation(fields: [taskId], references: [id])
-  taskId    String
+  task   Task   @relation(fields: [taskId], references: [id])
+  taskId String
 
-  createdBy   User     @relation(fields: [createdById], references: [id])
+  createdBy   User   @relation(fields: [createdById], references: [id])
   createdById String
 }

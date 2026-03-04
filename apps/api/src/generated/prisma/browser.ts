@@ -28,6 +28,11 @@ export type User = Prisma.UserModel
  */
 export type Task = Prisma.TaskModel
 /**
+ * Model TaskActivityLog
+ * 
+ */
+export type TaskActivityLog = Prisma.TaskActivityLogModel
+/**
  * Model Comment
  * 
  */
