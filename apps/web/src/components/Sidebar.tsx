@@ -15,9 +15,10 @@ import {
   Tag,
   X,
 } from "lucide-react";
-import { UserBadge, TeamBadge } from "./common/Badges";
 import { NavSection, type NavItem } from "./common/Navsection";
 import { getNameInitials, getStringInitial } from "@/lib/string";
+import { Badge } from "./common/Badges";
+import { useRouter, usePathname } from "next/navigation";
 
 const currentUser = {
   name: "Mody Ahmed",
@@ -29,29 +30,36 @@ const currentTeam = {
 };
 
 const generalItems: NavItem[] = [
-  { label: "Dashboard", icon: LayoutDashboard },
-  { label: "My Tasks", icon: SquareCheckBig },
-  { label: "Inbox", icon: Inbox },
-  { label: "Calendar", icon: Calendar },
+  { label: "Dashboard", icon: LayoutDashboard, href: "/dashboard" },
+  { label: "My Tasks", icon: SquareCheckBig, href: "/my-tasks" },
+  { label: "Inbox", icon: Inbox, href: "/inbox" },
+  { label: "Calendar", icon: Calendar, href: "/calendar" },
 ];
 
 const projectItems: NavItem[] = [
-  { label: "Spring Board", icon: Kanban },
-  { label: "Backlog", icon: Archive },
-  { label: "Roadmap", icon: Map },
-  { label: "Releases", icon: Tag },
+  { label: "Spring Board", icon: Kanban, href: "/sprint-board" },
+  { label: "Backlog", icon: Archive, href: "/backlog" },
+  { label: "Roadmap", icon: Map, href: "/roadmap" },
+  { label: "Releases", icon: Tag, href: "/releases" },
 ];
+
+const allItems = [...generalItems, ...projectItems];
 
 export default function Sidebar() {
   const [open, setOpen] = useState(false);
-  const [activeLabel, setActiveLabel] = useState("Dashboard");
+  const pathname = usePathname();
+  const router = useRouter();
+
+  // Derive active label from current route
+  const activeLabel =
+    allItems.find((item) => item.href === pathname)?.label ?? "";
 
   const firstLetter = getNameInitials(currentUser.name);
   const teamLetter = getStringInitial(currentTeam.name);
 
-  const handleSelect = (label: string) => {
-    setActiveLabel(label);
+  const handleSelect = (label: string, href?: string) => {
     setOpen(false);
+    if (href) router.push(href);
   };
 
   const sidebarContent = (
@@ -60,7 +68,7 @@ export default function Sidebar() {
         {/* Team header */}
         <div className="mb-5 flex items-start justify-between gap-1.5 px-1">
           <div className="flex items-start gap-1.5">
-            <TeamBadge letter={teamLetter} />
+            <Badge letter={teamLetter} variant="team" />
             <div className="flex flex-col items-start px-1">
               <p className="font-semibold">{currentTeam.name}</p>
               <p className="text-xs text-[#A1A1AA]">{currentTeam.email}</p>
@@ -110,7 +118,7 @@ export default function Sidebar() {
         type="button"
         className="mt-auto flex w-full items-center gap-3 border-t border-[#E4E4E7] bg-white px-4 py-3 text-left transition hover:bg-zinc-50"
       >
-        <UserBadge letter={firstLetter} />
+        <Badge letter={firstLetter} variant="user" />
         <div className="min-w-0 flex-1">
           <p className="truncate text-sm font-semibold text-zinc-900">
             {currentUser.name}
@@ -124,7 +132,6 @@ export default function Sidebar() {
 
   return (
     <>
-      {/*  control responsive behavior wiht backdrop  */}
       <aside className="hidden h-full w-64 shrink-0 flex-col border-r border-[#E4E4E7] bg-white text-zinc-900 md:flex">
         {sidebarContent}
       </aside>
@@ -135,7 +142,6 @@ export default function Sidebar() {
       >
         <Menu className="h-5 w-5" />
       </button>
-      {/* ── Mobile: backdrop ── */}
       {open && (
         <div
           className="fixed inset-0 z-40 bg-black/30 backdrop-blur-sm md:hidden"

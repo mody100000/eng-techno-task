@@ -1,47 +1,65 @@
-import { StatusBadge } from "./common/Badges";
+"use client";
 
-const taskStats = {
-  total: 8,
-  inProgress: 3,
-  blocked: 1,
-  backlog: 2,
-  done: 2,
+import { useEffect, useState } from "react";
+import { StatusBadge } from "./common/Badges";
+import { statusConfig } from "@/constants/task";
+import type { Task, TaskStatus } from "@/types/task.types";
+
+const STATUS_ORDER: TaskStatus[] = ["IN_PROGRESS", "BLOCKED", "TODO", "DONE"];
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:5000";
+
+const defaultCounts: Record<TaskStatus, number> = {
+  TODO: 0,
+  IN_PROGRESS: 0,
+  BLOCKED: 0,
+  DONE: 0,
 };
 
 export default function TaskFooter() {
+  const [counts, setCounts] = useState(defaultCounts);
+  const [total, setTotal] = useState(0);
+
+  useEffect(() => {
+    async function loadTaskStats() {
+      try {
+        const res = await fetch(`${API_BASE_URL}/api/tasks?pageSize=100`);
+        if (!res.ok) throw new Error();
+
+        const data = await res.json();
+        const tasks: Task[] = data.tasks ?? [];
+
+        const nextCounts = { ...defaultCounts };
+
+        tasks.forEach((task) => {
+          nextCounts[task.status]++;
+        });
+
+        setCounts(nextCounts);
+        setTotal(tasks.length);
+      } catch {
+        setCounts(defaultCounts);
+        setTotal(0);
+      }
+    }
+
+    loadTaskStats();
+  }, []);
+
   return (
     <footer className="flex items-center justify-between border-t border-[#E4E4E7] bg-white px-4 py-3 sm:px-6">
-      {/* total tasks */}
-      <span className="text-sm font-normal text-[#71717A]">
-        {taskStats.total} Tasks
-      </span>
+      <span className="text-sm text-[#71717A]">{total} Tasks</span>
 
-      {/* status breakdown */}
       <div className="flex items-center gap-2 sm:gap-4">
-        <StatusBadge
-          count={taskStats.inProgress}
-          label="In Progress"
-          dotClass="bg-blue-500"
-          textClass="text-blue-600"
-        />
-        <StatusBadge
-          count={taskStats.blocked}
-          label="Blocked"
-          dotClass="bg-red-500"
-          textClass="text-red-600"
-        />
-        <StatusBadge
-          count={taskStats.backlog}
-          label="Backlog"
-          dotClass="bg-zinc-400"
-          textClass="text-zinc-500"
-        />
-        <StatusBadge
-          count={taskStats.done}
-          label="Done"
-          dotClass="bg-green-500"
-          textClass="text-green-600"
-        />
+        {STATUS_ORDER.map((status) => (
+          <StatusBadge
+            key={status}
+            count={counts[status]}
+            label={statusConfig[status].label}
+            dotClass={statusConfig[status].dot}
+            textClass={statusConfig[status].text}
+          />
+        ))}
       </div>
     </footer>
   );

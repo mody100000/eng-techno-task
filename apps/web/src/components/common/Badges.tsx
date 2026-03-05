@@ -5,17 +5,38 @@ type StatusBadgeProps = {
   textClass: string;
 };
 
-export function UserBadge({ letter }: { letter: string }) {
-  return (
-    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#3B82F6] text-sm font-medium text-white">
-      {letter}
-    </div>
-  );
-}
+type BadgeProps = {
+  letter: string;
+  variant?: "user" | "task" | "team";
+  color?: string;
+  size?: "sm" | "md" | "lg";
+  className?: string;
+};
 
-export function TeamBadge({ letter }: { letter: string }) {
+export function Badge({
+  letter,
+  variant = "user",
+  color,
+  size = "md",
+  className = "",
+}: BadgeProps) {
+  // size map
+  const sizeClasses = {
+    sm: "h-6 w-6 text-xs",
+    md: "h-10 w-10 text-sm",
+    lg: "h-12 w-12 text-lg font-bold",
+  };
+
+  const variantClasses = {
+    user: "rounded-full bg-[#3B82F6] text-white font-medium",
+    team: `rounded-xl text-white font-bold ${color || "bg-[#7C3AED]"}`,
+    task: "rounded-lg text-white font-bold",
+  };
+
   return (
-    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#7C3AED] text-lg font-bold text-white">
+    <div
+      className={`flex items-center justify-center ${sizeClasses[size]} ${variantClasses[variant]} ${className || ""}`}
+    >
       {letter}
     </div>
   );
