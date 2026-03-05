@@ -3,13 +3,14 @@ import type { ComponentType } from "react";
 export type NavItem = {
   label: string;
   icon: ComponentType<{ className?: string }>;
+  href?: string;
 };
 
 type NavSectionProps = {
   title: string;
   items: NavItem[];
   activeLabel: string;
-  onSelect: (label: string) => void;
+  onSelect: (label: string, href?: string) => void;
 };
 
 export function NavSection({
@@ -32,7 +33,7 @@ export function NavSection({
             <li key={item.label}>
               <button
                 type="button"
-                onClick={() => onSelect(item.label)}
+                onClick={() => onSelect(item.label, item.href)}
                 className={`flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-left text-sm font-medium transition
                   ${
                     isActive

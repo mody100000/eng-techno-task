@@ -11,3 +11,13 @@ export function getNameInitials(name?: string) {
     .join("")
     .toUpperCase();
 }
+
+export function truncateText(text: string, maxLength = 40) {
+  if (!text) return "";
+
+  if (text.length <= maxLength) {
+    return text;
+  }
+
+  return text.slice(0, maxLength) + "...";
+}

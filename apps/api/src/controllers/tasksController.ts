@@ -14,7 +14,16 @@ import { getCurrentUser } from "../utils/getCurrentUser.js";
 
 export const getAllTasks = async (req: Request, res: Response) => {
   try {
-    const payload = req.body || {};
+    const payload = {
+      page: req.query.page,
+      pageSize: req.query.pageSize,
+      filter: {
+        status: req.query.status,
+        priority: req.query.priority,
+        search: req.query.search,
+        userAssigned: req.query.userAssigned,
+      },
+    };
     const parsed = taskQuerySchema.parse(payload);
 
     const filter = parsed.filter || {};
@@ -25,7 +34,7 @@ export const getAllTasks = async (req: Request, res: Response) => {
     );
     res.json(tasks);
   } catch (error) {
-    res.status(500).json(parseZodError(error));
+    res.status(400).json(parseZodError(error));
   }
 };
 
