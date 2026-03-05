@@ -6,6 +6,7 @@ import TaskGroup from "@/components/sprint-board/Taskgroup";
 import type { Task, TaskPriority, TaskStatus } from "@/types/task.types";
 import Button from "@/components/common/Button";
 import { SearchX } from "lucide-react";
+import TaskFooter from "@/components/TaskFooter";
 
 const STATUS_ORDER: TaskStatus[] = ["IN_PROGRESS", "BLOCKED", "TODO", "DONE"];
 const API_BASE_URL = "http://localhost:5000";
@@ -170,6 +171,7 @@ export default function SprintBoardPage() {
           </div>
         )}
       </div>
+      <TaskFooter />
     </div>
   );
 }
