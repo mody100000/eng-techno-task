@@ -10,7 +10,7 @@
 */
 
 export const TaskStatus = {
-  TODO: 'TODO',
+  BACKLOG: 'BACKLOG',
   IN_PROGRESS: 'IN_PROGRESS',
   BLOCKED: 'BLOCKED',
   DONE: 'DONE'

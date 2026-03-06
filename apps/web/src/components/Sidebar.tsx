@@ -52,7 +52,8 @@ export default function Sidebar() {
 
   // Derive active label from current route
   const activeLabel =
-    allItems.find((item) => item.href === pathname)?.label ?? "";
+    allItems.find((item) => item.href && pathname.startsWith(item.href))
+      ?.label ?? "";
 
   const firstLetter = getNameInitials(currentUser.name);
   const teamLetter = getStringInitial(currentTeam.name);

@@ -21,7 +21,7 @@ model User {
 }
 
 enum TaskStatus {
-  TODO
+  BACKLOG
   IN_PROGRESS
   BLOCKED
   DONE
@@ -38,7 +38,7 @@ model Task {
   title       String
   description String?
   category    String?
-  status      TaskStatus   @default(TODO)
+  status      TaskStatus   @default(BACKLOG)
   priority    TaskPriority @default(MEDIUM)
   startDate   DateTime     @default(now())
   dueDate     DateTime?

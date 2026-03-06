@@ -11,7 +11,18 @@ import {
   MoreVertical,
 } from "lucide-react";
 import Button from "@/components/common/Button";
-import type { TaskPriority, TaskStatus } from "@/types/task.types";
+import Dropdown from "@/components/common/Dropdown";
+import {
+  categoryFilterOptions,
+  priorityFilterOptions,
+  statusFilterOptions,
+} from "@/constants/task";
+import type {
+  TaskCategory,
+  TaskPriority,
+  TaskStatus,
+} from "@/types/task.types";
+import { pageSizeOptions } from "../../constants/task";
 
 const views = [
   { label: "List", icon: LayoutList },
@@ -30,6 +41,8 @@ type Props = {
   onStatusChange: (value: "ALL" | TaskStatus) => void;
   priority: "ALL" | TaskPriority;
   onPriorityChange: (value: "ALL" | TaskPriority) => void;
+  category: "ALL" | TaskCategory;
+  onCategoryChange: (value: "ALL" | TaskCategory) => void;
   pageSize: number;
   onPageSizeChange: (value: number) => void;
 };
@@ -43,6 +56,8 @@ export default function SprintBoardHeader({
   onStatusChange,
   priority,
   onPriorityChange,
+  category,
+  onCategoryChange,
   pageSize,
   onPageSizeChange,
 }: Props) {
@@ -88,42 +103,33 @@ export default function SprintBoardHeader({
       {/* Filters */}
       <div className="flex justify-between px-6 pt-4 pb-1">
         <div className="flex items-center gap-2 ">
-          <select
+          <Dropdown<"ALL" | TaskStatus>
             value={status}
-            onChange={(e) =>
-              onStatusChange(e.target.value as "ALL" | TaskStatus)
-            }
-            className="h-8 rounded-lg border border-[#E4E4E7] bg-white px-2 text-xs font-medium text-zinc-700 focus:outline-none"
-          >
-            <option value="ALL">All status</option>
-            <option value="TODO">Backlog</option>
-            <option value="IN_PROGRESS">In Progress</option>
-            <option value="BLOCKED">Blocked</option>
-            <option value="DONE">Done</option>
-          </select>
+            onChange={onStatusChange}
+            options={statusFilterOptions}
+            className="w-36"
+          />
 
-          <select
+          <Dropdown<"ALL" | TaskPriority>
             value={priority}
-            onChange={(e) =>
-              onPriorityChange(e.target.value as "ALL" | TaskPriority)
-            }
-            className="h-8 rounded-lg border border-[#E4E4E7] bg-white px-2 text-xs font-medium text-zinc-700 focus:outline-none"
-          >
-            <option value="ALL">All priority</option>
-            <option value="LOW">Low</option>
-            <option value="MEDIUM">Medium</option>
-            <option value="HIGH">High</option>
-          </select>
+            onChange={onPriorityChange}
+            options={priorityFilterOptions}
+            className="w-36"
+          />
 
-          <select
+          <Dropdown<"ALL" | TaskCategory>
+            value={category}
+            onChange={onCategoryChange}
+            options={categoryFilterOptions}
+            className="w-36"
+          />
+
+          <Dropdown<number>
             value={pageSize}
-            onChange={(e) => onPageSizeChange(Number(e.target.value))}
-            className="h-8 rounded-lg border border-[#E4E4E7] bg-white px-2 text-xs font-medium text-zinc-700 focus:outline-none"
-          >
-            <option value={3}>3 / page</option>
-            <option value={10}>10 / page</option>
-            <option value={20}>20 / page</option>
-          </select>
+            onChange={onPageSizeChange}
+            options={pageSizeOptions}
+            className="w-28"
+          />
         </div>
         <label className="flex h-8 items-center gap-2 rounded-lg border border-[#E4E4E7] bg-white px-2.5">
           <Search className="h-3.5 w-3.5 text-zinc-400" />

@@ -14,6 +14,13 @@ export const getTasksWithPaginationAndFiltering = async (
   filter: {
     status?: TaskStatus | undefined;
     priority?: TaskPriority | undefined;
+    category?:
+      | "BACKEND"
+      | "FRONTEND"
+      | "DEVOBS"
+      | "DESIGN"
+      | "TESTING"
+      | undefined;
     search?: string | undefined; // search term for title or description
     userAssigned?: string | undefined; // user ID to filter tasks assigned to a specific user
   },
@@ -27,6 +34,10 @@ export const getTasksWithPaginationAndFiltering = async (
 
   if (filter.priority) {
     where.priority = filter.priority;
+  }
+
+  if (filter.category) {
+    where.category = filter.category;
   }
 
   if (filter.search) {

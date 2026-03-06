@@ -5,12 +5,17 @@ import { StatusBadge } from "./common/Badges";
 import { statusConfig } from "@/constants/task";
 import type { Task, TaskStatus } from "@/types/task.types";
 
-const STATUS_ORDER: TaskStatus[] = ["IN_PROGRESS", "BLOCKED", "TODO", "DONE"];
+const STATUS_ORDER: TaskStatus[] = [
+  "IN_PROGRESS",
+  "BLOCKED",
+  "BACKLOG",
+  "DONE",
+];
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:5000";
 
 const defaultCounts: Record<TaskStatus, number> = {
-  TODO: 0,
+  BACKLOG: 0,
   IN_PROGRESS: 0,
   BLOCKED: 0,
   DONE: 0,

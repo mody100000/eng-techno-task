@@ -4,7 +4,6 @@ import Link from "next/link";
 import { ChevronRight } from "lucide-react";
 import { usePathname } from "next/navigation";
 
-// Converts a slug like "sprint-board" → "Sprint Board"
 function formatSegment(segment: string) {
   return segment
     .split("-")
@@ -34,18 +33,18 @@ export default function Breadcrumb() {
   });
 
   return (
-    <nav className="flex items-center gap-x-1.5 p-2">
+    <nav className="invisible md:visible flex items-center gap-x-1.5">
       <p className="text-[#71717A] hover:underline flex items-center gap-1">
         Projects
       </p>
 
       {crumbs.map((crumb) => (
         <React.Fragment key={crumb.href}>
-          <ChevronRight className="h-4 w-4 text-[#A1A1AA]" />
+          <ChevronRight className="h-4 w-4 text-[#71717A]" />
           {crumb.isLast ? (
             <h2 className="text-gray-800">{crumb.label}</h2>
           ) : (
-            <Link href={crumb.href} className="text-[#A1A1AA] hover:underline">
+            <Link href={crumb.href} className="text-[#71717A] hover:underline">
               {crumb.label}
             </Link>
           )}

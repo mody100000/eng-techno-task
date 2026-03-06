@@ -20,6 +20,7 @@ export const getAllTasks = async (req: Request, res: Response) => {
       filter: {
         status: req.query.status,
         priority: req.query.priority,
+        category: req.query.category,
         search: req.query.search,
         userAssigned: req.query.userAssigned,
       },
@@ -49,6 +50,10 @@ export const createNewTask = async (req: Request, res: Response) => {
       : new Date();
     const dueDate = parsed.dueDate ? new Date(parsed.dueDate) : null;
 
+    const user = await getCurrentUser();
+    if (!user) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
     const task = await createTask({
       title: parsed.title,
       description: parsed.description,
@@ -60,7 +65,7 @@ export const createNewTask = async (req: Request, res: Response) => {
       assignedTo: parsed.assignedToId
         ? { connect: { id: parsed.assignedToId } }
         : undefined,
-      createdBy: { connect: { id: (await getCurrentUser())?.id } },
+      createdBy: { connect: { id: user.id } },
     } as any);
 
     res.status(201).json({
