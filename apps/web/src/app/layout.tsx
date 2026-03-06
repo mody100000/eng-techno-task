@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Sidebar from "@/components/Sidebar";
-
+import { ToastContainer } from "react-toastify";
 import Navbar from "@/components/Navbar";
 
 const geistSans = Geist({
@@ -34,6 +34,12 @@ export default function RootLayout({
           <Sidebar />
           <div className="flex flex-1 flex-col overflow-hidden">
             <Navbar />
+            <ToastContainer
+              autoClose={3000}
+              hideProgressBar={false}
+              closeOnClick
+              pauseOnHover
+            />
             <main className="flex-1 overflow-y-auto">{children}</main>
           </div>
         </div>

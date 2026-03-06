@@ -3,12 +3,24 @@
 import { useEffect, useState } from "react";
 import SprintBoardHeader from "@/components/sprint-board/Sprintboardheader";
 import TaskGroup from "@/components/sprint-board/Taskgroup";
-import type { Task, TaskPriority, TaskStatus } from "@/types/task.types";
+import type {
+  Task,
+  TaskCategory,
+  TaskPriority,
+  TaskStatus,
+} from "@/types/task.types";
 import Button from "@/components/common/Button";
 import { SearchX } from "lucide-react";
 import TaskFooter from "@/components/TaskFooter";
+import CreateTaskModal from "@/components/sprint-board/CreateTaskModal";
+import { TaskGroupSkeleton } from "@/components/common/TaskGroupSkeleton";
 
-const STATUS_ORDER: TaskStatus[] = ["IN_PROGRESS", "BLOCKED", "TODO", "DONE"];
+const STATUS_ORDER: TaskStatus[] = [
+  "IN_PROGRESS",
+  "BLOCKED",
+  "BACKLOG",
+  "DONE",
+];
 const API_BASE_URL = "http://localhost:5000";
 
 export default function SprintBoardPage() {
@@ -22,8 +34,13 @@ export default function SprintBoardPage() {
   const [priorityFilter, setPriorityFilter] = useState<"ALL" | TaskPriority>(
     "ALL",
   );
+  const [categoryFilter, setCategoryFilter] = useState<"ALL" | TaskCategory>(
+    "ALL",
+  );
   const [searchInput, setSearchInput] = useState("");
   const [search, setSearch] = useState("");
+  const [isCreateTaskOpen, setIsCreateTaskOpen] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
     const timeoutId = setTimeout(() => {
@@ -46,6 +63,9 @@ export default function SprintBoardPage() {
     }
     if (priorityFilter !== "ALL") {
       params.set("priority", priorityFilter);
+    }
+    if (categoryFilter !== "ALL") {
+      params.set("category", categoryFilter);
     }
     if (search) {
       params.set("search", search);
@@ -75,11 +95,19 @@ export default function SprintBoardPage() {
       })
       .finally(() => setLoading(false));
     return () => controller.abort();
-  }, [page, pageSize, statusFilter, priorityFilter, search]);
+  }, [
+    page,
+    pageSize,
+    statusFilter,
+    priorityFilter,
+    categoryFilter,
+    search,
+    refreshKey,
+  ]);
 
   useEffect(() => {
     setPage(1);
-  }, [statusFilter, priorityFilter, pageSize]);
+  }, [statusFilter, priorityFilter, categoryFilter, pageSize]);
 
   // Group tasks by status
   const grouped = STATUS_ORDER.reduce<Record<TaskStatus, Task[]>>(
@@ -87,10 +115,13 @@ export default function SprintBoardPage() {
       acc[status] = tasks.filter((t) => t.status === status);
       return acc;
     },
-    { TODO: [], IN_PROGRESS: [], BLOCKED: [], DONE: [] },
+    { BACKLOG: [], IN_PROGRESS: [], BLOCKED: [], DONE: [] },
   );
   const hasActiveFilters =
-    statusFilter !== "ALL" || priorityFilter !== "ALL" || Boolean(search);
+    statusFilter !== "ALL" ||
+    priorityFilter !== "ALL" ||
+    categoryFilter !== "ALL" ||
+    Boolean(search);
   const visibleStatuses = hasActiveFilters
     ? STATUS_ORDER.filter((status) => grouped[status].length > 0)
     : STATUS_ORDER;
@@ -98,23 +129,27 @@ export default function SprintBoardPage() {
   return (
     <div className="flex h-full flex-col bg-[#FAFAFA]">
       <SprintBoardHeader
+        onAddTask={() => setIsCreateTaskOpen(true)}
         search={searchInput}
         onSearchChange={setSearchInput}
         status={statusFilter}
         onStatusChange={setStatusFilter}
         priority={priorityFilter}
         onPriorityChange={setPriorityFilter}
+        category={categoryFilter}
+        onCategoryChange={setCategoryFilter}
         pageSize={pageSize}
         onPageSizeChange={setPageSize}
       />
 
       <div className="flex-1 overflow-y-auto py-4">
         {loading && (
-          <div className="flex items-center justify-center py-24">
-            <span className="h-6 w-6 animate-spin rounded-full border-2 border-[#7C3AED] border-t-transparent" />
+          <div className="py-4">
+            <TaskGroupSkeleton rowCount={4} />
+            <TaskGroupSkeleton rowCount={2} />
+            <TaskGroupSkeleton rowCount={3} />
           </div>
         )}
-
         {error && (
           <div className="mx-4 rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-600">
             {error}
@@ -172,6 +207,15 @@ export default function SprintBoardPage() {
         )}
       </div>
       <TaskFooter />
+
+      <CreateTaskModal
+        open={isCreateTaskOpen}
+        onClose={() => setIsCreateTaskOpen(false)}
+        onCreated={() => {
+          setPage(1);
+          setRefreshKey((value) => value + 1);
+        }}
+      />
     </div>
   );
 }

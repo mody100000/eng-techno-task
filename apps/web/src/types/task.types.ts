@@ -1,4 +1,4 @@
-export type TaskStatus = "IN_PROGRESS" | "TODO" | "BLOCKED" | "DONE";
+export type TaskStatus = "IN_PROGRESS" | "BACKLOG" | "BLOCKED" | "DONE";
 export type TaskPriority = "LOW" | "MEDIUM" | "HIGH";
 export type TaskCategory =
   | "BACKEND"

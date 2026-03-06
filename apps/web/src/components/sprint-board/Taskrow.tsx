@@ -1,5 +1,8 @@
+"use client";
+
 import { Flag, User, MoreVertical } from "lucide-react";
 import type { Task, TaskCategory } from "@/types/task.types";
+import { useRouter } from "next/navigation";
 
 import moment from "moment";
 import { getNameInitials, truncateText } from "@/lib/string";
@@ -17,19 +20,38 @@ function formatDate(date: string | null) {
 }
 
 export default function TaskRow({ task }: { task: Task }) {
+  const router = useRouter();
   const priority = priorityConfig[task.priority]!;
   const category = getCategoryConfig(task.category);
   const firstLetter = getNameInitials(
     categoryConfig[task.category as TaskCategory]?.label || "U",
   );
+
+  const openTaskDetails = () => {
+    router.push(`/sprint-board/${task.id}`);
+  };
+
   return (
-    <tr className="group border-b border-[#F4F4F5] bg-white transition-colors hover:bg-[#EDE9FE98]">
+    <tr
+      className="group cursor-pointer border-b border-[#F4F4F5] bg-white transition-colors hover:bg-[#EDE9FE98]"
+      onClick={openTaskDetails}
+      onKeyDown={(event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          openTaskDetails();
+        }
+      }}
+      tabIndex={0}
+      aria-label={`Open task ${task.title}`}
+    >
       {/* Title */}
       <td className="py-2.5 pl-4 pr-3">
         <div className="flex items-center gap-2.5">
           {/* Checkbox */}
           <input
             type="checkbox"
+            onClick={(event) => event.stopPropagation()}
+            onKeyDown={(event) => event.stopPropagation()}
             className="h-3.5 w-3.5 shrink-0 cursor-pointer rounded border-zinc-300 accent-[#7C3AED]"
           />
           <div className="flex items-center gap-2">
@@ -97,6 +119,7 @@ export default function TaskRow({ task }: { task: Task }) {
       <td className="py-2.5 pr-3 text-right">
         <button
           type="button"
+          onClick={(event) => event.stopPropagation()}
           className="rounded-lg p-1 text-zinc-400 transition hover:bg-zinc-200 hover:text-zinc-600 "
         >
           <MoreVertical className="h-4.5 w-4.5" />
