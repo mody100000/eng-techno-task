@@ -30,7 +30,7 @@ const currentTeam = {
 };
 
 const generalItems: NavItem[] = [
-  { label: "Dashboard", icon: LayoutDashboard, href: "/dashboard" },
+  { label: "Dashboard", icon: LayoutDashboard, href: "/" },
   { label: "My Tasks", icon: SquareCheckBig, href: "/my-tasks" },
   { label: "Inbox", icon: Inbox, href: "/inbox" },
   { label: "Calendar", icon: Calendar, href: "/calendar" },
@@ -52,8 +52,11 @@ export default function Sidebar() {
 
   // Derive active label from current route
   const activeLabel =
-    allItems.find((item) => item.href && pathname.startsWith(item.href))
-      ?.label ?? "";
+    allItems.find((item) =>
+      item.href === "/"
+        ? pathname === "/"
+        : item.href && pathname.startsWith(item.href),
+    )?.label ?? "";
 
   const firstLetter = getNameInitials(currentUser.name);
   const teamLetter = getStringInitial(currentTeam.name);

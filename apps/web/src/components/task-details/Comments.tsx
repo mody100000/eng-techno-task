@@ -1,7 +1,7 @@
 "use client";
 
 import moment from "moment";
-import { Zap } from "lucide-react";
+import { Circle } from "lucide-react";
 import { Badge } from "@/components/common/Badges";
 import Button from "@/components/common/Button";
 import { getNameInitials } from "@/lib/string";
@@ -100,10 +100,9 @@ export default function TaskDetailsCommentsSection({
                 <div key={item.id} className="flex gap-4">
                   {/* Left track */}
                   <div className="flex w-8 shrink-0 flex-col items-center">
-                    {/* Icon / Avatar */}
                     {isActivity ? (
-                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-zinc-200 bg-zinc-50 text-zinc-400">
-                        <Zap className="h-3.5 w-3.5" />
+                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#F4F4F5] text-zinc-600">
+                        <Circle className="h-3.5 w-3.5" />
                       </div>
                     ) : (
                       <Badge
@@ -112,7 +111,6 @@ export default function TaskDetailsCommentsSection({
                         size="sm"
                       />
                     )}
-                    {/* Always show connector line */}
                     <span
                       className={`my-1 block w-px flex-1 ${isLast ? "bg-transparent" : "bg-zinc-200"}`}
                       style={{ minHeight: "16px" }}
@@ -121,7 +119,6 @@ export default function TaskDetailsCommentsSection({
 
                   {/* Content */}
                   <div className={`flex-1 pb-4 ${isLast ? "pb-0" : ""}`}>
-                    {/* Name + date inline */}
                     <div className="mb-1 flex flex-wrap items-baseline gap-1">
                       <span className="text-xs text-zinc-400">
                         {isActivity ? item.action : ""}
