@@ -1,11 +1,12 @@
 "use client";
 
 import type { ComponentType } from "react";
-import { CalendarDays, Flag } from "lucide-react";
+import { Archive, CalendarDays, Edit, Flag } from "lucide-react";
 import { Badge } from "../common/Badges";
 import { getNameInitials } from "@/lib/string";
 import { getCategoryConfig, categoryConfig } from "@/constants/task";
 import { TaskCategory } from "@/types/task.types";
+import Button from "../common/Button";
 
 export type MetaWithIcon = {
   label: string;
@@ -42,17 +43,26 @@ export default function TaskDetailsMainSection({
   return (
     <section className="min-h-112 bg-white ">
       <div className="space-y-3 pt-5 px-5">
-        <span
-          className={`inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium ${categoryMeta.textClass}`}
-        >
-          <Badge
-            size="md"
-            letter={firstLetter}
-            variant="task"
-            className={categoryData.dot}
-          />
-        </span>
-
+        <div className="flex justify-between">
+          <span
+            className={`inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium ${categoryMeta.textClass}`}
+          >
+            <Badge
+              size="md"
+              letter={firstLetter}
+              variant="task"
+              className={categoryData.dot}
+            />
+          </span>
+          <div className="flex items-center gap-x-2.5">
+            <Button value="Edit" icon={Edit} variant="outline">
+              Edit
+            </Button>
+            <Button value="Archive" icon={Archive} variant="danger">
+              Archive
+            </Button>
+          </div>
+        </div>
         <h1 className="text-2xl font-bold text-zinc-900">{title}</h1>
 
         <div className="flex flex-wrap items-center gap-2 text-sm">
