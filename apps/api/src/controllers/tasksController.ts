@@ -4,13 +4,25 @@ import {
   createTask,
   getTaskById,
   archiveTaskById,
+  restoreTaskById,
   recordTaskActivity,
+  assignTaskToUser,
+  updateTaskById,
 } from "../services/tasksService.js";
 import { taskQuerySchema } from "../schemas/GetTasksSchema.js";
 import { createTaskSchema } from "../schemas/CreateTaskSchema.js";
+import {
+  assignTaskBodySchema,
+  assignTaskParamsSchema,
+} from "../schemas/AssignTaskSchema.js";
+import {
+  updateTaskParamsSchema,
+  updateTaskSchema,
+} from "../schemas/UpdateTaskSchema.js";
 import { parseZodError } from "../utils/parseZodError.js";
 import { TaskPriority } from "../generated/prisma/enums.js";
 import { getCurrentUser } from "../utils/getCurrentUser.js";
+import { getUserById } from "../services/usersService.js";
 
 export const getAllTasks = async (req: Request, res: Response) => {
   try {
@@ -119,14 +131,147 @@ export const archiveTaskHandler = async (req: Request, res: Response) => {
       return;
     }
 
-    const task = await archiveTaskById(id, currentUser.id);
-    await recordTaskActivity(task.id, "Task archived", currentUser.id);
+    let archieved = false;
+
+    if (existingTask.archivedById) {
+      await Promise.all([
+        restoreTaskById(id),
+        recordTaskActivity(existingTask.id, "Task restored", currentUser.id),
+      ]);
+      archieved = false;
+    } else {
+      await Promise.all([
+        archiveTaskById(id, currentUser.id),
+        recordTaskActivity(existingTask.id, "Task archived", currentUser.id),
+      ]);
+      archieved = true;
+    }
 
     res.status(200).json({
       message: "Task archived successfully",
-      task,
+      archieved,
     });
   } catch (error) {
     res.status(500).json(parseZodError(error));
+  }
+};
+
+export const assignTaskHandler = async (req: Request, res: Response) => {
+  try {
+    const parsedParams = assignTaskParamsSchema.parse(req.params || {});
+    const parsedBody = assignTaskBodySchema.parse(req.body || {});
+
+    const existingTask = await getTaskById(parsedParams.id);
+    if (!existingTask) {
+      res.status(404).json({ message: "Task not found" });
+      return;
+    }
+
+    const currentUser = await getCurrentUser();
+    if (!currentUser?.id) {
+      res.status(500).json({ message: "Default user not found" });
+      return;
+    }
+
+    let assignedUserName = "Unknown user";
+    if (parsedBody.assignedToId) {
+      const assignedUser = await getUserById(parsedBody.assignedToId);
+      if (!assignedUser) {
+        res.status(404).json({ message: "Assigned user not found" });
+        return;
+      }
+      assignedUserName = assignedUser.name || assignedUser.id;
+    }
+
+    if (existingTask.assignedToId === parsedBody.assignedToId) {
+      res.status(200).json({
+        message: "Task assignee is unchanged",
+        task: existingTask,
+      });
+      return;
+    }
+
+    const updatedTask = await assignTaskToUser(
+      parsedParams.id,
+      parsedBody.assignedToId,
+    );
+
+    const activityAction = !parsedBody.assignedToId
+      ? "Task unassigned"
+      : parsedBody.assignedToId === currentUser.id
+        ? "Task self-assigned"
+        : `Task assigned to ${assignedUserName}`;
+
+    await recordTaskActivity(parsedParams.id, activityAction, currentUser.id);
+
+    res.status(200).json({
+      message: "Task assignee updated successfully",
+      task: updatedTask,
+    });
+  } catch (error) {
+    res.status(400).json(parseZodError(error));
+  }
+};
+
+export const updateTaskHandler = async (req: Request, res: Response) => {
+  try {
+    const parsedParams = updateTaskParamsSchema.parse(req.params || {});
+    const parsedBody = updateTaskSchema.parse(req.body || {});
+
+    const existingTask = await getTaskById(parsedParams.id);
+    if (!existingTask) {
+      res.status(404).json({ message: "Task not found" });
+      return;
+    }
+
+    const currentUser = await getCurrentUser();
+    if (!currentUser?.id) {
+      res.status(500).json({ message: "Default user not found" });
+      return;
+    }
+
+    let assignedUserName = "Unknown user";
+    if (parsedBody.assignedToId) {
+      const assignedUser = await getUserById(parsedBody.assignedToId);
+      if (!assignedUser) {
+        res.status(404).json({ message: "Assigned user not found" });
+        return;
+      }
+      assignedUserName = assignedUser.name || assignedUser.id;
+    }
+
+    const updatedTask = await updateTaskById(parsedParams.id, {
+      title: parsedBody.title,
+      description: parsedBody.description,
+      status: parsedBody.status,
+      priority: parsedBody.priority,
+      category: parsedBody.category,
+      startDate: parsedBody.startDate
+        ? new Date(parsedBody.startDate)
+        : undefined,
+      dueDate: parsedBody.dueDate ? new Date(parsedBody.dueDate) : null,
+      assignedTo: parsedBody.assignedToId
+        ? { connect: { id: parsedBody.assignedToId } }
+        : { disconnect: true },
+    } as any);
+
+    const assigneeChanged =
+      existingTask.assignedToId !== parsedBody.assignedToId;
+    const activityAction = assigneeChanged
+      ? !parsedBody.assignedToId
+        ? "Task unassigned"
+        : parsedBody.assignedToId === currentUser.id
+          ? "Task self-assigned"
+          : `Task assigned to ${assignedUserName}`
+      : "Task updated";
+
+    await recordTaskActivity(parsedParams.id, activityAction, currentUser.id);
+
+    res.status(200).json({
+      message: "Task updated successfully",
+      task: updatedTask,
+    });
+  } catch (error) {
+    res.status(400).json(parseZodError(error));
   }
 };

@@ -1,8 +1,7 @@
 import type { TaskPriority, TaskStatus } from "../generated/prisma/enums.js";
 import type {
-  TaskCreateArgs,
   TaskCreateInput,
-  TaskSelect,
+  TaskUpdateInput,
   TaskWhereInput,
 } from "../generated/prisma/models.js";
 import { prisma } from "../lib/prisma.js";
@@ -55,6 +54,12 @@ export const getTasksWithPaginationAndFiltering = async (
     where,
     skip,
     take: pageSize,
+    include: {
+      assignedTo: true,
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
   });
 
   const totalTasks = await prisma.task.count({ where });
@@ -97,6 +102,68 @@ export const archiveTaskById = async (id: string, archivedById: string) => {
     where: { id },
     data: {
       archivedById,
+    },
+  });
+
+  return task;
+};
+
+export const restoreTaskById = async (id: string) => {
+  const task = await prisma.task.update({
+    where: { id },
+    data: {
+      archivedById: null,
+    },
+  });
+
+  return task;
+};
+
+export const assignTaskToUser = async (
+  id: string,
+  assignedToId: string | null,
+) => {
+  const task = await prisma.task.update({
+    where: { id },
+    data: {
+      assignedToId,
+    },
+    include: {
+      assignedTo: {
+        select: {
+          id: true,
+          name: true,
+        },
+      },
+      createdBy: {
+        select: {
+          id: true,
+          name: true,
+        },
+      },
+    },
+  });
+
+  return task;
+};
+
+export const updateTaskById = async (id: string, data: TaskUpdateInput) => {
+  const task = await prisma.task.update({
+    where: { id },
+    data,
+    include: {
+      assignedTo: {
+        select: {
+          id: true,
+          name: true,
+        },
+      },
+      createdBy: {
+        select: {
+          id: true,
+          name: true,
+        },
+      },
     },
   });
 

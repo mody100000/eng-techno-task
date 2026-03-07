@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { StatusBadge } from "./common/Badges";
 import { statusConfig } from "@/constants/task";
 import type { Task, TaskStatus } from "@/types/task.types";
+import { API_BASE_URL } from "@/utils/api";
 
 const STATUS_ORDER: TaskStatus[] = [
   "IN_PROGRESS",
@@ -11,8 +12,6 @@ const STATUS_ORDER: TaskStatus[] = [
   "BACKLOG",
   "DONE",
 ];
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:5000";
 
 const defaultCounts: Record<TaskStatus, number> = {
   BACKLOG: 0,

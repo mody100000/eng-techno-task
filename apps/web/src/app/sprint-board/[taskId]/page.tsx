@@ -19,14 +19,18 @@ import type {
   TimelineItem,
 } from "@/components/task-details/Comments";
 import { getNameInitials } from "@/lib/string";
+import { API_BASE_URL } from "@/utils/api";
 
 type TaskDetails = Task & {
   assignedTo?: { id: string; name: string | null } | null;
   createdBy?: { id: string; name: string | null } | null;
 };
 
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:5000";
+type TaskUser = {
+  id: string;
+  name: string | null;
+};
+
 const currentUser = {
   name: "Mody Ahmed",
 };
@@ -51,6 +55,40 @@ export default function TaskDetailsPage() {
   const [timelineFilter, setTimelineFilter] = useState<TimelineFilter>("ALL");
   const [comment, setComment] = useState("");
   const [commentSubmitting, setCommentSubmitting] = useState(false);
+  const [assignableUsers, setAssignableUsers] = useState<TaskUser[]>([]);
+  const [assigningUser, setAssigningUser] = useState(false);
+  const [assigneeError, setAssigneeError] = useState<string | null>(null);
+
+  const mapTimelineItems = (
+    items: {
+      type: "comment" | "activity";
+      id: string;
+      datetime: string;
+      message?: string;
+      action?: string;
+      createdBy?: { name: string | null } | null;
+      performedBy?: { name: string | null } | null;
+    }[],
+  ): TimelineItem[] => {
+    return (items || []).map((item) => {
+      if (item.type === "activity") {
+        return {
+          type: "activity",
+          id: item.id,
+          datetime: item.datetime,
+          action: item.action || "updated task",
+          actorName: item.performedBy?.name || "Unknown user",
+        };
+      }
+      return {
+        type: "comment",
+        id: item.id,
+        datetime: item.datetime,
+        message: item.message || "",
+        actorName: item.createdBy?.name || "Unknown user",
+      };
+    });
+  };
 
   useEffect(() => {
     if (!taskId) {
@@ -108,35 +146,7 @@ export default function TaskDetailsPage() {
         return data;
       })
       .then((items) => {
-        const mapped: TimelineItem[] = (items || []).map(
-          (item: {
-            type: "comment" | "activity";
-            id: string;
-            datetime: string;
-            message?: string;
-            action?: string;
-            createdBy?: { name: string | null } | null;
-            performedBy?: { name: string | null } | null;
-          }) => {
-            if (item.type === "activity") {
-              return {
-                type: "activity",
-                id: item.id,
-                datetime: item.datetime,
-                action: item.action || "updated task",
-                actorName: item.performedBy?.name || "Unknown user",
-              };
-            }
-            return {
-              type: "comment",
-              id: item.id,
-              datetime: item.datetime,
-              message: item.message || "",
-              actorName: item.createdBy?.name || "Unknown user",
-            };
-          },
-        );
-        setTimelineItems(mapped);
+        setTimelineItems(mapTimelineItems(items || []));
       })
       .catch((fetchError: Error) => {
         if (fetchError.name !== "AbortError") {
@@ -147,6 +157,29 @@ export default function TaskDetailsPage() {
 
     return () => controller.abort();
   }, [taskId]);
+
+  useEffect(() => {
+    const controller = new AbortController();
+
+    fetch(`${API_BASE_URL}/api/users`, {
+      signal: controller.signal,
+    })
+      .then(async (res) => {
+        const data = await res.json();
+        if (!res.ok) {
+          throw new Error(data?.message || "Failed to fetch users");
+        }
+        return data;
+      })
+      .then((data) => setAssignableUsers((data || []) as TaskUser[]))
+      .catch((fetchError: Error) => {
+        if (fetchError.name !== "AbortError") {
+          setAssigneeError(fetchError.message);
+        }
+      });
+
+    return () => controller.abort();
+  }, []);
 
   const statusMeta = useMemo(() => {
     if (!task) return null;
@@ -220,7 +253,7 @@ export default function TaskDetailsPage() {
         `${API_BASE_URL}/api/comments/task/${taskId}/timeline`,
       );
       const timelineData = await timelineRes.json();
-      setTimelineItems(timelineData);
+      setTimelineItems(mapTimelineItems(timelineData || []));
     } catch (submitError) {
       // 4. Roll back on failure
       setTimelineItems(previousItems);
@@ -235,15 +268,65 @@ export default function TaskDetailsPage() {
     }
   };
 
-  if (loading) {
-    return (
-      <div className="flex h-full items-center justify-center bg-[#FAFAFA] px-6">
-        <span className="h-6 w-6 animate-spin rounded-full border-2 border-[#7C3AED] border-t-transparent" />
-      </div>
-    );
-  }
+  const handleAssigneeChange = async (assignedToId: string | null) => {
+    if (!taskId || !task) return;
 
-  if (error || !task) {
+    const previousTask = task;
+    const nextAssignee = assignedToId
+      ? assignableUsers.find((user) => user.id === assignedToId) || null
+      : null;
+
+    setAssigneeError(null);
+    setAssigningUser(true);
+    setTask({
+      ...task,
+      assignedToId,
+      assignedTo: nextAssignee,
+    });
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/tasks/${taskId}/assign`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ assignedToId }),
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data?.message || "Failed to assign task");
+      }
+
+      setTask(data.task as TaskDetails);
+
+      const timelineRes = await fetch(
+        `${API_BASE_URL}/api/comments/task/${taskId}/timeline`,
+      );
+      const timelineData = await timelineRes.json();
+      setTimelineItems(mapTimelineItems(timelineData || []));
+    } catch (assignError) {
+      setTask(previousTask);
+      setAssigneeError(
+        assignError instanceof Error
+          ? assignError.message
+          : "Failed to assign task",
+      );
+    } finally {
+      setAssigningUser(false);
+    }
+  };
+
+  const handleTaskUpdated = async (updatedTask: Task) => {
+    setTask(updatedTask as TaskDetails);
+
+    if (!taskId) return;
+    const timelineRes = await fetch(
+      `${API_BASE_URL}/api/comments/task/${taskId}/timeline`,
+    );
+    const timelineData = await timelineRes.json();
+    setTimelineItems(mapTimelineItems(timelineData || []));
+  };
+
+  if (error) {
     return (
       <div className="bg-[#FAFAFA] px-6 py-8">
         <div className="rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-600">
@@ -253,12 +336,25 @@ export default function TaskDetailsPage() {
     );
   }
 
+  if (loading || !task) {
+    return (
+      <div className="flex h-full items-center justify-center bg-[#FAFAFA] px-6">
+        <span className="h-6 w-6 animate-spin rounded-full border-2 border-[#7C3AED] border-t-transparent" />
+      </div>
+    );
+  }
+
   return (
     <div className="bg-white">
       <div className="grid lg:grid-cols-[1fr_300px] lg:items-start relative">
         <div>
           <TaskDetailsMainSection
+            task={task}
+            assignableUsers={assignableUsers}
+            onTaskUpdated={handleTaskUpdated}
+            taskId={task.id}
             title={task.title}
+            isArchieved={!!task.archivedById}
             description={task.description}
             dueDateLabel={formatDate(task.dueDate)}
             priorityLabel={priorityConfig[task.priority].label}
@@ -294,9 +390,11 @@ export default function TaskDetailsPage() {
         <TaskDetailsSidebar
           status={task.status}
           priority={task.priority}
-          assigneeLabel={
-            task.assignedTo?.name || task.assignedToId || "Unassigned"
-          }
+          assigneeId={task.assignedToId}
+          assignableUsers={assignableUsers}
+          onAssigneeChange={handleAssigneeChange}
+          assignDisabled={assigningUser}
+          assigneeError={assigneeError}
           category={task.category}
           startDateLabel={formatDate(task.startDate)}
           dueDateLabel={formatDate(task.dueDate)}

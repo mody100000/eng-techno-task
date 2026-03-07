@@ -1,14 +1,19 @@
-import { prisma } from "../src/lib/prisma.js";
+import { prisma } from "../src/lib/prisma.ts";
 
 async function main() {
   console.log("Starting seed...");
 
   const userNames = [
     "John Doe",
-    "mahmoud gomaa",
+    "Mahmoud Gomaa",
     "Sarah Lee",
     "Ahmed Ali",
     "Emily Davis",
+    "Omar Hassan",
+    "Lina Karim",
+    "James Carter",
+    "Nour Eldeen",
+    "Sophia Turner",
   ];
 
   for (const name of userNames) {

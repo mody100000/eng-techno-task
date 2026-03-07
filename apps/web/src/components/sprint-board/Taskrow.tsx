@@ -75,10 +75,11 @@ export default function TaskRow({ task }: { task: Task }) {
 
       {/* Assignee */}
       <td className="px-3 py-2.5">
-        {task.assignedToId ? (
-          <div className="flex h-6 w-6 items-center justify-center rounded-full bg-[#7C3AED]/10 text-[10px] font-semibold text-[#7C3AED]">
-            A
-          </div>
+        {task?.assignedTo ? (
+          <Badge
+            letter={getNameInitials(task.assignedTo.name || task.assignedTo.id)}
+            size="sm"
+          />
         ) : (
           <div className="flex h-6 w-6 items-center justify-center rounded-full border border-dashed border-zinc-300 text-zinc-300">
             <User className="h-3 w-3" />

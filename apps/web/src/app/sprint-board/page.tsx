@@ -14,6 +14,7 @@ import { SearchX } from "lucide-react";
 import TaskFooter from "@/components/TaskFooter";
 import CreateTaskModal from "@/components/sprint-board/CreateTaskModal";
 import { TaskGroupSkeleton } from "@/components/common/TaskGroupSkeleton";
+import { API_BASE_URL } from "@/utils/api";
 
 const STATUS_ORDER: TaskStatus[] = [
   "IN_PROGRESS",
@@ -21,7 +22,6 @@ const STATUS_ORDER: TaskStatus[] = [
   "BACKLOG",
   "DONE",
 ];
-const API_BASE_URL = "http://localhost:5000";
 
 export default function SprintBoardPage() {
   const [tasks, setTasks] = useState<Task[]>([]);

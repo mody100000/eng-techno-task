@@ -101,8 +101,8 @@ export default function SprintBoardHeader({
         </div>
       </div>
       {/* Filters */}
-      <div className="flex justify-between px-6 pt-4 pb-1">
-        <div className="flex items-center gap-2 ">
+      <div className="flex flex-col gap-2 px-6 pt-4 pb-1 lg:flex-row lg:items-center lg:justify-between">
+        <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-center">
           <Dropdown<"ALL" | TaskStatus>
             value={status}
             onChange={onStatusChange}
@@ -131,14 +131,15 @@ export default function SprintBoardHeader({
             className="w-28"
           />
         </div>
-        <label className="flex h-8 items-center gap-2 rounded-lg border border-[#E4E4E7] bg-white px-2.5">
+
+        <label className="flex h-8 w-full items-center gap-2 rounded-lg border border-[#E4E4E7] bg-white px-2.5 sm:w-40 lg:w-48">
           <Search className="h-3.5 w-3.5 text-zinc-400" />
           <input
             type="search"
             value={search}
             onChange={(e) => onSearchChange(e.target.value)}
             placeholder="Search tasks"
-            className="w-40 border-0 bg-transparent text-xs text-zinc-700 placeholder:text-zinc-400 focus:outline-none"
+            className="w-full border-0 bg-transparent text-xs text-zinc-700 placeholder:text-zinc-400 focus:outline-none"
           />
         </label>
       </div>
