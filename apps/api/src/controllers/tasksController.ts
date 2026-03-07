@@ -1,4 +1,5 @@
 import type { Request, Response } from "express";
+import { ZodError } from "zod";
 import {
   getTasksWithPaginationAndFiltering,
   createTask,
@@ -85,7 +86,11 @@ export const createNewTask = async (req: Request, res: Response) => {
       task,
     });
   } catch (error) {
-    res.status(400).json(parseZodError(error));
+    if (error instanceof ZodError) {
+      res.status(400).json(parseZodError(error));
+      return;
+    }
+    res.status(500).json(parseZodError(error));
   }
 };
 

@@ -1,3 +1,4 @@
+import "dotenv/config";
 import express from "express";
 import taskRoutes from "./routes/taskRoutes.js";
 import commentsRoutes from "./routes/commentsRoutes.js";
@@ -6,13 +7,18 @@ import cors from "cors";
 import type { CorsOptions } from "cors";
 
 const app = express();
+app.set("trust proxy", 1);
 
-const allowedOrigins = [
+const defaultOrigins = [
   "http://localhost:3000",
   "http://localhost",
   "http://127.0.0.1",
-  "https://your-production-domain.com",
 ];
+
+const allowedOrigins =
+  process.env.CORS_ORIGINS?.split(",")
+    .map((origin) => origin.trim())
+    .filter(Boolean) || defaultOrigins;
 
 const corsOptions: CorsOptions = {
   origin: (origin, callback) => {

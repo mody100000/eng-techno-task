@@ -5,7 +5,7 @@ import { prisma } from "../lib/prisma.js";
 let _cachedUser: Awaited<ReturnType<typeof prisma.user.findFirst>> | null =
   null;
 
-const defaultUserName = env("DEFAULT_USER_NAME");
+const defaultUserName = process.env.DEFAULT_USER_NAME || env("DEFAULT_USER_NAME");
 
 export const getCurrentUser = async () => {
   if (_cachedUser) {
