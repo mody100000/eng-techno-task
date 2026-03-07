@@ -1,36 +1,56 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { X } from "lucide-react";
+import { User, X } from "lucide-react";
 import { toast } from "react-toastify";
 import Button from "@/components/common/Button";
 import Input from "@/components/common/Input";
-import Dropdown from "@/components/common/Dropdown";
+import Dropdown, { type DropdownOption } from "@/components/common/Dropdown";
 import {
   categoryOptions,
   priorityOptions,
   statusOptions,
 } from "@/constants/task";
+import { getNameInitials } from "@/lib/string";
 import type {
   Task,
   TaskCategory,
   TaskPriority,
   TaskStatus,
 } from "@/types/task.types";
+import { API_BASE_URL } from "@/utils/api";
 
-const API_BASE_URL = "http://localhost:5000";
+type TaskUser = {
+  id: string;
+  name: string | null;
+};
 
 type Props = {
   open: boolean;
   onClose: () => void;
   onCreated: (task: Task) => void;
+  mode?: "create" | "edit";
+  initialTask?: Task | null;
+  users?: TaskUser[];
 };
 
 function getTodayDateInputValue() {
   return new Date().toISOString().slice(0, 10);
 }
 
-export default function CreateTaskModal({ open, onClose, onCreated }: Props) {
+function toDateInputValue(value?: string | null) {
+  if (!value) return "";
+  return new Date(value).toISOString().slice(0, 10);
+}
+
+export default function CreateTaskModal({
+  open,
+  onClose,
+  onCreated,
+  mode = "create",
+  initialTask = null,
+  users,
+}: Props) {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [status, setStatus] = useState<TaskStatus>("BACKLOG");
@@ -41,6 +61,7 @@ export default function CreateTaskModal({ open, onClose, onCreated }: Props) {
   const [dueDate, setDueDate] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [assignableUsers, setAssignableUsers] = useState<TaskUser[]>([]);
 
   const dueDateError = useMemo(() => {
     if (!dueDate || !startDate) return "";
@@ -49,6 +70,15 @@ export default function CreateTaskModal({ open, onClose, onCreated }: Props) {
     }
     return "";
   }, [dueDate, startDate]);
+
+  const assigneeOptions: DropdownOption<string>[] = [
+    { value: "", label: "Unassigned", icon: User },
+    ...assignableUsers.map((user) => ({
+      value: user.id,
+      label: user.name || user.id,
+      badgeLetter: getNameInitials(user.name || user.id),
+    })),
+  ];
 
   const resetForm = useCallback(() => {
     setTitle("");
@@ -64,9 +94,8 @@ export default function CreateTaskModal({ open, onClose, onCreated }: Props) {
 
   const handleClose = useCallback(() => {
     if (loading) return;
-    resetForm();
     onClose();
-  }, [loading, onClose, resetForm]);
+  }, [loading, onClose]);
 
   useEffect(() => {
     if (!open) return;
@@ -77,7 +106,51 @@ export default function CreateTaskModal({ open, onClose, onCreated }: Props) {
     return () => document.removeEventListener("keydown", onKeyDown);
   }, [open, handleClose]);
 
+  useEffect(() => {
+    if (!open) return;
+
+    if (users?.length) {
+      setAssignableUsers(users);
+      return;
+    }
+
+    const controller = new AbortController();
+    fetch(`${API_BASE_URL}/api/users`, { signal: controller.signal })
+      .then(async (res) => {
+        const data = await res.json();
+        if (!res.ok) throw new Error(data?.message || "Failed to fetch users");
+        return data;
+      })
+      .then((data) => setAssignableUsers((data || []) as TaskUser[]))
+      .catch((fetchError: Error) => {
+        if (fetchError.name !== "AbortError") setError(fetchError.message);
+      });
+
+    return () => controller.abort();
+  }, [open, users]);
+
+  useEffect(() => {
+    if (!open) return;
+
+    if (mode === "edit" && initialTask) {
+      setTitle(initialTask.title || "");
+      setDescription(initialTask.description || "");
+      setStatus(initialTask.status);
+      setPriority(initialTask.priority);
+      setCategory(initialTask.category || "FRONTEND");
+      setAssignee(initialTask.assignedToId || "");
+      setStartDate(toDateInputValue(initialTask.startDate) || getTodayDateInputValue());
+      setDueDate(toDateInputValue(initialTask.dueDate));
+      setError(null);
+      return;
+    }
+
+    resetForm();
+  }, [open, mode, initialTask, resetForm]);
+
   if (!open) return null;
+
+  const isEdit = mode === "edit" && !!initialTask;
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -96,40 +169,42 @@ export default function CreateTaskModal({ open, onClose, onCreated }: Props) {
     setError(null);
 
     try {
-      const response = await fetch(`${API_BASE_URL}/api/tasks`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          title: title.trim(),
-          description: description.trim() || null,
-          status,
-          priority,
-          category,
-          assignedToId: assignee.trim() || undefined,
-          startDate: startDate
-            ? new Date(`${startDate}T00:00:00`).toISOString()
-            : undefined,
-          dueDate: dueDate
-            ? new Date(`${dueDate}T00:00:00`).toISOString()
-            : null,
-        }),
-      });
+      const response = await fetch(
+        isEdit ? `${API_BASE_URL}/api/tasks/${initialTask.id}` : `${API_BASE_URL}/api/tasks`,
+        {
+          method: isEdit ? "PATCH" : "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            title: title.trim(),
+            description: description.trim() || null,
+            status,
+            priority,
+            category,
+            assignedToId: isEdit ? assignee || null : assignee || undefined,
+            startDate: startDate
+              ? new Date(`${startDate}T00:00:00`).toISOString()
+              : undefined,
+            dueDate: dueDate
+              ? new Date(`${dueDate}T00:00:00`).toISOString()
+              : null,
+          }),
+        },
+      );
 
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data?.message || "Failed to create task");
+        throw new Error(data?.message || `Failed to ${isEdit ? "update" : "create"} task`);
       }
 
       onCreated(data.task as Task);
-      resetForm();
       onClose();
-      toast.success("Task created successfully!");
+      toast.success(isEdit ? "Task updated successfully!" : "Task created successfully!");
     } catch (submitError) {
       setError(
         submitError instanceof Error
           ? submitError.message
-          : "Failed to create task",
+          : `Failed to ${isEdit ? "update" : "create"} task`,
       );
     } finally {
       setLoading(false);
@@ -138,7 +213,6 @@ export default function CreateTaskModal({ open, onClose, onCreated }: Props) {
 
   return (
     <div className="fixed inset-0 z-40 flex items-center justify-center p-4">
-      {/* Accessible backdrop */}
       <button
         type="button"
         aria-label="Close modal"
@@ -146,13 +220,16 @@ export default function CreateTaskModal({ open, onClose, onCreated }: Props) {
         onClick={handleClose}
       />
 
-      {/* Modal card — sibling to backdrop, no stopPropagation needed */}
       <div className="relative w-full max-w-2xl rounded-2xl bg-white p-5 shadow-2xl">
         <div className="mb-4 flex items-start justify-between">
           <div>
-            <h2 className="text-lg font-semibold text-zinc-900">Create Task</h2>
+            <h2 className="text-lg font-semibold text-zinc-900">
+              {isEdit ? "Update Task" : "Create Task"}
+            </h2>
             <p className="text-sm text-zinc-500">
-              Add a new task to the sprint board.
+              {isEdit
+                ? "Edit task details and save your changes."
+                : "Add a new task to the sprint board."}
             </p>
           </div>
           <button
@@ -203,11 +280,12 @@ export default function CreateTaskModal({ open, onClose, onCreated }: Props) {
           </div>
 
           <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-3">
-            <Input
+            <Dropdown
               label="Assignee"
               value={assignee}
-              onChange={(event) => setAssignee(event.target.value)}
-              placeholder="User id (optional)"
+              onChange={setAssignee}
+              options={assigneeOptions}
+              placeholder="Unassigned"
             />
             <Input
               label="Start Date"
@@ -241,7 +319,7 @@ export default function CreateTaskModal({ open, onClose, onCreated }: Props) {
               Cancel
             </Button>
             <Button type="submit" loading={loading}>
-              Create Task
+              {isEdit ? "Update Task" : "Create Task"}
             </Button>
           </div>
         </form>

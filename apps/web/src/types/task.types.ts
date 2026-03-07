@@ -19,5 +19,9 @@ export type Task = {
   updatedAt: string;
   createdById: string;
   assignedToId: string | null;
+  assignedTo?: {
+    name: string | null;
+    id: string;
+  } | null;
   archivedById: string | null;
 };

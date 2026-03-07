@@ -121,7 +121,7 @@ export default function TaskDetailsCommentsSection({
                   <div className={`flex-1 pb-4 ${isLast ? "pb-0" : ""}`}>
                     <div className="mb-1 flex flex-wrap items-baseline gap-1">
                       <span className="text-xs text-zinc-400">
-                        {isActivity ? item.action : ""}
+                        {isActivity ? item.action : ""} by
                       </span>
 
                       <span className="text-sm font-semibold text-zinc-800">

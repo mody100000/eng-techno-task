@@ -1,6 +1,7 @@
 "use client";
 
 import { User } from "lucide-react";
+import Dropdown, { type DropdownOption } from "@/components/common/Dropdown";
 import {
   categoryOptions,
   getCategoryConfig,
@@ -9,16 +10,26 @@ import {
   statusConfig,
   statusOptions,
 } from "@/constants/task";
+import { getNameInitials } from "@/lib/string";
 import type {
   TaskCategory,
   TaskPriority,
   TaskStatus,
 } from "@/types/task.types";
 
+type TaskUser = {
+  id: string;
+  name: string | null;
+};
+
 type Props = {
   status: TaskStatus;
   priority: TaskPriority;
-  assigneeLabel: string;
+  assigneeId: string | null;
+  assignableUsers: TaskUser[];
+  onAssigneeChange: (userId: string | null) => void;
+  assignDisabled?: boolean;
+  assigneeError?: string | null;
   category: string;
   startDateLabel: string;
   dueDateLabel: string;
@@ -30,7 +41,11 @@ type Props = {
 export default function TaskDetailsSidebar({
   status,
   priority,
-  assigneeLabel,
+  assigneeId,
+  assignableUsers,
+  onAssigneeChange,
+  assignDisabled = false,
+  assigneeError = null,
   category,
   startDateLabel,
   dueDateLabel,
@@ -50,6 +65,14 @@ export default function TaskDetailsSidebar({
   const CategoryIcon = categoryOptions.find(
     (item) => item.value === (category as TaskCategory),
   )?.icon;
+  const assigneeOptions: DropdownOption<string>[] = [
+    { value: "", label: "Unassigned", icon: User },
+    ...assignableUsers.map((user) => ({
+      value: user.id,
+      label: user.name || user.id,
+      badgeLetter: getNameInitials(user.name || user.id),
+    })),
+  ];
 
   const labelClassName = "mb-1 text-xs font-medium uppercase text-zinc-400";
 
@@ -80,7 +103,19 @@ export default function TaskDetailsSidebar({
 
         <div>
           <p className={labelClassName}>Assign</p>
-          <p className="text-sm font-medium text-zinc-800">{assigneeLabel}</p>
+          <Dropdown
+            value={assigneeId || ""}
+            options={assigneeOptions}
+            onChange={(value) => onAssigneeChange(value || null)}
+            disabled={assignDisabled}
+            placeholder="Unassigned"
+          />
+          {assigneeError ? (
+            <p className="mt-1 text-xs text-red-600">{assigneeError}</p>
+          ) : null}
+          {assignDisabled ? (
+            <p className="mt-1 text-xs text-zinc-500">Updating assignee...</p>
+          ) : null}
         </div>
 
         <div>

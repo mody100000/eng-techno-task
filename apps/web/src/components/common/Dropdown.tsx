@@ -8,10 +8,12 @@ import {
   type ComponentType,
 } from "react";
 import { Check, ChevronDown } from "lucide-react";
+import { Badge } from "@/components/common/Badges";
 
 export type DropdownOption<T extends string | number> = {
   value: T;
   label: string;
+  badgeLetter?: string;
   icon?: ComponentType<{ className?: string }>;
   iconClassName?: string;
   dotClassName?: string;
@@ -24,6 +26,7 @@ type Props<T extends string | number> = {
   value: T;
   options: DropdownOption<T>[];
   onChange: (value: T) => void;
+  disabled?: boolean;
   placeholder?: string;
   className?: string;
 };
@@ -33,6 +36,7 @@ export default function Dropdown<T extends string | number>({
   value,
   options,
   onChange,
+  disabled = false,
   placeholder = "Select",
   className = "",
 }: Props<T>) {
@@ -58,7 +62,9 @@ export default function Dropdown<T extends string | number>({
 
   const valueNode = selected ? (
     <span className="flex items-center gap-2">
-      {selected.icon ? (
+      {selected.badgeLetter ? (
+        <Badge letter={selected.badgeLetter} size="sm" />
+      ) : selected.icon ? (
         <selected.icon
           className={`h-3.5 w-3.5 ${selected.iconClassName ?? "text-zinc-500"}`}
         />
@@ -83,15 +89,18 @@ export default function Dropdown<T extends string | number>({
 
       <button
         type="button"
-        onClick={() => setOpen((prev) => !prev)}
-        className="flex h-10 w-full items-center justify-between rounded-lg border border-[#E4E4E7] bg-white px-3 text-sm"
+        onClick={() => {
+          if (!disabled) setOpen((prev) => !prev);
+        }}
+        disabled={disabled}
+        className="flex h-10 w-full items-center justify-between rounded-lg border border-[#E4E4E7] bg-white px-3 text-sm whitespace-normal disabled:cursor-not-allowed disabled:bg-zinc-100 disabled:text-zinc-500 lg:whitespace-nowrap"
       >
         {valueNode}
         <ChevronDown className="h-4 w-4 text-zinc-400" />
       </button>
 
       {open ? (
-        <div className="absolute z-30 mt-1 w-full rounded-lg border border-[#E4E4E7] bg-white p-1 shadow-lg">
+        <div className="absolute z-30 mt-1 w-full rounded-lg border border-[#E4E4E7] bg-white p-1 shadow-lg max-h-60 overflow-y-auto">
           {options.map((option) => {
             const isSelected = option.value === value;
 
@@ -110,7 +119,9 @@ export default function Dropdown<T extends string | number>({
                 }`}
               >
                 <span className="flex items-center gap-2">
-                  {option.icon ? (
+                  {option.badgeLetter ? (
+                    <Badge letter={option.badgeLetter} size="sm" />
+                  ) : option.icon ? (
                     <option.icon
                       className={`h-3.5 w-3.5 ${option.iconClassName ?? "text-zinc-500"}`}
                     />
