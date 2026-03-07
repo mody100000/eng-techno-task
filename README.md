@@ -1,6 +1,8 @@
 # Sprint Board Monorepo
 
 Production URL: [https://2e94-44-210-109-165.ngrok-free.app/sprint-board](https://2e94-44-210-109-165.ngrok-free.app/sprint-board)
+<img width="1920" height="1080" alt="image" src="https://github.com/user-attachments/assets/dc2a9e5f-9de5-45bb-9cce-4ca6e82e866a" />
+
 
 ## Prerequisites
 
