@@ -1,10 +1,22 @@
+import { ZodError } from "zod";
+
 export const parseZodError = (error: unknown): Record<string, unknown> => {
-  if (error instanceof Error && "name" in error && error.name === "ZodError") {
+  if (error instanceof ZodError) {
     return {
       name: "ValidationError",
-      messages: JSON.parse(error.message),
+      messages: error.issues,
     };
   }
 
-  return JSON.parse(JSON.stringify(error));
+  if (error instanceof Error) {
+    return {
+      name: error.name,
+      message: error.message,
+    };
+  }
+
+  return {
+    name: "UnknownError",
+    message: "An unexpected error occurred",
+  };
 };

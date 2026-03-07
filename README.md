@@ -3,6 +3,7 @@
 Production URL: [https://2e94-44-210-109-165.ngrok-free.app/sprint-board](https://2e94-44-210-109-165.ngrok-free.app/sprint-board)
 
 ## Prerequisites
+
 - Node.js 20+
 - pnpm 9+
 - Docker
@@ -10,6 +11,7 @@ Production URL: [https://2e94-44-210-109-165.ngrok-free.app/sprint-board](https:
 ## Tech Stack
 
 ### Backend (`apps/api`)
+
 - Express 5
 - Prisma ORM 7
 - SQLite (`better-sqlite3` + `@prisma/adapter-better-sqlite3`)
@@ -18,6 +20,7 @@ Production URL: [https://2e94-44-210-109-165.ngrok-free.app/sprint-board](https:
 - TypeScript + tsx
 
 ### Frontend (`apps/web`)
+
 - Next.js 16 (App Router)
 - React 19
 - Tailwind CSS 4
@@ -27,6 +30,7 @@ Production URL: [https://2e94-44-210-109-165.ngrok-free.app/sprint-board](https:
 - `lucide-react`
 
 ## Project Structure
+
 ```text
 .
 ├── apps
@@ -62,65 +66,58 @@ Production URL: [https://2e94-44-210-109-165.ngrok-free.app/sprint-board](https:
 ```
 
 ## Local Setup
+
 1. Install dependencies:
+
 ```bash
 pnpm install
 ```
 
 2. Create `apps/api/.env`:
+
 ```env
 DATABASE_URL="file:./prisma/dev.db"
 DEFAULT_USER_NAME="Mahmoud Gomaa"
+CORS_ORIGINS="http://localhost:3000,http://localhost,http://127.0.0.1,https://2e94-44-210-109-165.ngrok-free.app"
 PORT=5000
 ```
 
 3. Run Prisma setup:
+
 ```bash
-pnpm --filter api exec prisma generate --config prisma.config.ts --schema prisma/schema.prisma
-pnpm --filter api exec prisma migrate deploy --config prisma.config.ts --schema prisma/schema.prisma
-pnpm --filter api seed
+cd apps/api
+npx prisma generate
+npx prisma migrate dev
+npx prisma db seed
 ```
 
 4. Start both apps:
+
 ```bash
 pnpm dev
 ```
 
 5. Open:
+
 - Frontend: `http://localhost:3000/sprint-board`
 - API: `http://localhost:5000`
 
 ## Docker Setup
+
 Build and run:
+
 ```bash
 docker build -t sprint-board .
 docker run --rm -p 8080:80 -v $(pwd)/apps/api/prisma:/app/apps/api/prisma sprint-board
 ```
 
 Open:
+
 - App (Nginx): `http://localhost:8080/sprint-board`
 - API is proxied under: `http://localhost:8080/api/*`
 
-## Prisma Commands
-Run from repo root:
-```bash
-# Generate client
-pnpm --filter api exec prisma generate --config prisma.config.ts --schema prisma/schema.prisma
-
-# Apply existing migrations
-pnpm --filter api exec prisma migrate deploy --config prisma.config.ts --schema prisma/schema.prisma
-
-# Create and apply a new migration (dev)
-pnpm --filter api exec prisma migrate dev --config prisma.config.ts --schema prisma/schema.prisma --name <migration_name>
-
-# Seed
-pnpm --filter api seed
-
-# Open Prisma Studio
-pnpm --filter api exec prisma studio --config prisma.config.ts --schema prisma/schema.prisma
-```
-
 ## Backend API Endpoints
+
 Base URL locally: `http://localhost:5000/api`
 
 - `GET /tasks`
@@ -150,6 +147,7 @@ Base URL locally: `http://localhost:5000/api`
 ## Features
 
 ### Backend
+
 - Task CRUD flow (create, list with filters/pagination, details, update).
 - Assign/unassign and archive/restore actions.
 - Activity logging for task events.
@@ -158,10 +156,11 @@ Base URL locally: `http://localhost:5000/api`
 - Rate limiting for archive toggle endpoint.
 
 ### Frontend
+
 - Sprint board list grouped by status.
 - Filtering, searching, and pagination.
 - Create and edit task modal.
 - Task details page with status/priority/category metadata.
-- Assign user from sidebar with optimistic UI.
+- Assign user from sidebar.
 - Comments & activity timeline with optimistic comment posting.
 - Archive/restore actions with rate-limit error handling toast.
