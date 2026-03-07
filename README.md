@@ -78,7 +78,7 @@ pnpm install
 ```env
 DATABASE_URL="file:./prisma/dev.db"
 DEFAULT_USER_NAME="Mahmoud Gomaa"
-CORS_ORIGINS="http://localhost:3000,http://localhost,http://127.0.0.1,https://2e94-44-210-109-165.ngrok-free.app"
+CORS_ORIGINS="*"
 PORT=5000
 ```
 
@@ -107,8 +107,8 @@ pnpm dev
 Build and run:
 
 ```bash
-docker build -t sprint-board .
-docker run --rm -p 8080:80 -v $(pwd)/apps/api/prisma:/app/apps/api/prisma sprint-board
+docker build -t eng-techno .
+docker run --rm -p 8080:80 -v $(pwd)/apps/api/prisma:/app/apps/api/prisma eng-techno
 ```
 
 Open:

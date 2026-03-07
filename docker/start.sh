@@ -3,6 +3,7 @@ set -euo pipefail
 
 # Apply DB migrations before starting services
 export DATABASE_URL="${DATABASE_URL:-file:/app/apps/api/prisma/dev.db}"
+export DOTENV_CONFIG_PATH="${DOTENV_CONFIG_PATH:-/app/apps/api/.env}"
 
 echo "Running Prisma migrations..."
 cd /app/apps/api

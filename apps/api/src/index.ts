@@ -15,14 +15,18 @@ const defaultOrigins = [
   "http://127.0.0.1",
 ];
 
-const allowedOrigins =
-  process.env.CORS_ORIGINS?.split(",")
-    .map((origin) => origin.trim())
-    .filter(Boolean) || defaultOrigins;
+const corsOriginsEnv = process.env.CORS_ORIGINS?.trim();
+const allowAllOrigins = !corsOriginsEnv || corsOriginsEnv === "*";
+const allowedOrigins = allowAllOrigins
+  ? defaultOrigins
+  : corsOriginsEnv
+      .split(",")
+      .map((origin) => origin.trim())
+      .filter(Boolean);
 
 const corsOptions: CorsOptions = {
   origin: (origin, callback) => {
-    if (!origin || allowedOrigins.includes(origin)) {
+    if (allowAllOrigins || !origin || allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
       callback(new Error("Not allowed by CORS"));

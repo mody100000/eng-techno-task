@@ -32,7 +32,7 @@ ENV NODE_ENV=production
 ENV PORT=5000
 ENV DATABASE_URL=file:/app/apps/api/prisma/dev.db
 ENV DEFAULT_USER_NAME="mahmoud gomaa"
-ENV CORS_ORIGINS="http://localhost:3000,http://localhost,http://127.0.0.1"
+ENV CORS_ORIGINS="*"
 
 COPY --from=build /app/node_modules ./node_modules
 COPY --from=build /app/apps/api/node_modules ./apps/api/node_modules
